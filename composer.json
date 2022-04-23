@@ -1,0 +1,21 @@
+{
+    "name": "stastoken/litesitemap",
+    "description": "This is an implementation of the site map generator map, where you can set your own properties for each url",
+    "license": "free software",
+    "authors": [
+        {
+            "name": "Stas Token",
+            "email": "ff.0xff@yandex.ru"
+        }
+    ],
+    "require": {
+        "php": ">=7.3",
+        "ext-simplexml": "*",
+        "ext-mbstring": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "stastoken\\litesitemap\\": "src/"
+        }
+    }
+}
