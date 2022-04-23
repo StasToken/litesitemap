@@ -7,11 +7,9 @@ use stastoken\litesitemap\Exceptions\LiteSitemapException;
 use stastoken\litesitemap\Exceptions\ModelException;
 use stastoken\litesitemap\Model\RulesNode;
 
+
 class LazySitemap
 {
-    const SITEMAP_URLS = 'SITEMAP_URLS';
-    const SITEMAP_INDEX = 'SITEMAP_INDEX';
-
     private $dir = '';
     private $limit_link = 2;
     private $limit_size = 50000;
@@ -63,9 +61,7 @@ class LazySitemap
         $this->buildLinks($urls, $rules);
         $this->toNameSitemap();
         $this->buildIndex($rules);
-//        var_dump($this->file_sitemap);
-
-        //todo validate
+        $this->toNameIndex();
         $this->save();
 
     }
@@ -94,8 +90,7 @@ class LazySitemap
     private function buildIndex(array $rules = [])
     {
         $sitemap_list = array_merge(array(), $this->file_sitemap); // Just cloning an array
-
-        $blank = function ($number,$original_name){
+        $blank = function ($number, $original_name) {
             $pre_save = new \stdClass();
             $pre_save->temp_file = '';
             $pre_save->serial_number = $number;
@@ -103,15 +98,10 @@ class LazySitemap
             return $pre_save;
         };
 
-$s = 0;
-
-        $make_index_sitemap = function (array &$files) use (&$make_index_sitemap, &$rules,&$blank,&$s) {
-            $s++;
-            echo "callable #: ".$s."\n";
+        $make_index_sitemap = function (array &$files) use (&$make_index_sitemap, &$rules, &$blank) {
             $chunk_name_function = &$this->chunk_name_make;
             $dom = new DomMakerSitemapIndex();
             foreach ($files as $ptr => $name) {
-                var_dump($ptr,count($files));
                 $url = $this->link_domain . $name->original_name;
                 $dom->set($url, $rules);
                 if ($dom->bytes() >= $this->limit_size or $dom->links() >= $this->limit_link) {
@@ -129,34 +119,9 @@ $s = 0;
             }
             $this->number_files++;
             $chunk_name = $chunk_name_function($this->number_files, $this->name);
-            $this->tempSaving($dom->make(), $this->number_files,$chunk_name);
+            $this->tempSaving($dom->make(), $this->number_files, $chunk_name);
             $files[] = $blank($this->number_files, $chunk_name);
         };
-
-
-
-
-//        $make_index_sitemap = function (array &$files) use (&$make_index_sitemap, &$rules) {
-//            $chunk_name_function = &$this->chunk_name_make;
-//            $dom = new DomMakerSitemapIndex();
-//            foreach ($files as $ptr => $name) {
-//                $url = $this->link_domain . $name->original_name;
-//                $dom->set($url, $rules);
-//                if ($dom->bytes() >= $this->limit_size or $dom->links() >= $this->limit_link) {
-//                    $dom->rollback();
-//                    $this->number_files++;
-//                    $chunk_name = $chunk_name_function($this->number_files, $this->name);
-//                    $this->tempSaving($dom->make(), $this->number_files, $chunk_name);
-//                    $make_index_sitemap($files);
-//                    return;
-//                }
-//                unset($files[$ptr]);
-//            }
-//            $this->number_files++;
-//            $chunk_name = $chunk_name_function($this->number_files, $this->name);
-//            $this->tempSaving($dom->make(), $this->number_files,$chunk_name);
-//        };
-        var_dump($sitemap_list,'==============================');
         $make_index_sitemap($sitemap_list);
     }
 
@@ -176,72 +141,9 @@ $s = 0;
 
     private function toNameIndex()
     {
-        if (count($this->file_index) === 1) {
-            $first = array_key_first($this->file_index);
-            $this->file_index[$first]->original_name = $this->name;
-        } else {
-            $chunk_name_function = &$this->chunk_name_make;
-            foreach ($this->file_index as $key => $value) {
-                if (array_key_first($this->file_index) === $key) {
-                    $this->file_index[$key] = $this->name;
-                    continue;
-                }
-                $chunk_name = $chunk_name_function($value->serial_number, $this->name);
-                $this->file_index[$key]->original_name = $chunk_name;
-            }
-        }
-    }
-
-    public function makeOld(array $urls, array $rules = [], DomMakerSitemap $dom_maker_redefined = null)
-    {
-        $number = 1;
-        $last_chunk_name = '';
-        $is_first = true;
-        $this->validate($rules);
-        $make = function (array &$urls) use (&$make, &$rules, &$is_first, &$number, &$last_chunk_name, &$dom_maker_redefined) {
-            if (is_null($dom_maker_redefined)) {
-                $dom = new DomMakerSitemap();
-            } else {
-                $dom = clone $dom_maker_redefined;
-            }
-            foreach ($urls as $ptr => $url) {
-                $dom->set($url, $rules);
-                if ($dom->bytes() >= $this->limit_size or $dom->links() > $this->limit_link) {
-                    $dom->rollback();
-                    if ($is_first) {
-                        $is_first = false;
-                        $this->tempSaving($dom->make(), $this->name);
-                        $make($urls);
-                        return;
-                    }
-                    $chunk_name_function = $this->chunk_name_make;
-                    $chunk_name = $chunk_name_function($number, $this->name, $last_chunk_name);
-                    $number++;
-                    $last_chunk_name = $chunk_name;
-                    $this->tempSaving($dom->make(), $chunk_name);
-                    $make($urls);
-                    return;
-                }
-                unset($urls[$ptr]);
-            }
-            if ($is_first) {
-                $is_first = false;
-                $this->tempSaving($dom->make(), $this->name);
-                return;
-            }
-            $chunk_name_function = $this->chunk_name_make;
-            $chunk_name = $chunk_name_function($number, $this->name, $last_chunk_name);
-            $number++;
-            $last_chunk_name = $chunk_name;
-            $this->tempSaving($dom->make(), $chunk_name);
-        };
-        $make($urls);
-        $this->makeIndexSitemap();
-
-
-        //todo validate
-        $this->save();
-
+        //The last generated file must have the original name
+        $last_key = array_key_last($this->file_sitemap);
+        $this->file_sitemap[$last_key]->original_name = $this->name;
     }
 
     /**
@@ -262,7 +164,6 @@ $s = 0;
     private function tempSaving(string $xml, int $number, $original_name = null)
     {
         $temp_file = tempnam(sys_get_temp_dir(), 'sitemap_generator_' . $number);
-//        var_dump($temp_file);
         $this->temp_files[] = $temp_file;
         $handle = fopen($temp_file, "a");
         flock($handle, LOCK_EX);
@@ -279,14 +180,7 @@ $s = 0;
         $pre_save->temp_file = $temp_file;
         $pre_save->serial_number = $number;
         $pre_save->original_name = $original_name ?: '';
-//        $pre_save->type = $type;
         $this->file_sitemap[] = $pre_save;
-
-//        if($type === self::SITEMAP_URLS){
-//            $this->file_sitemap[] = $pre_save;
-//        }else{
-//            $this->file_index[] = $pre_save;
-//        }
     }
 
     /**

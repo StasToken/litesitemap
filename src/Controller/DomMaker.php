@@ -49,7 +49,7 @@ abstract class DomMaker
     }
 
     /**
-     * Сhecks whether the rule matches the current URL
+     * Checks whether the rule matches the current URL
      * @param string $regex
      * @param string $link
      * @return bool
