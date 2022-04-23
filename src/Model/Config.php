@@ -2,6 +2,7 @@
 
 namespace stastoken\litesitemap\Model;
 
+use DateTimeInterface;
 use stastoken\litesitemap\Exceptions\ConfigException;
 
 /**
@@ -27,6 +28,31 @@ class Config
     const DEFAULT_HEADER_SITEMAP_INDEX = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
     const DEFAULT_XMLNS_SITEMAP_INDEX = "http://www.sitemaps.org/schemas/sitemap/0.9";
 
+    /*
+     Tag constants "changefreq"
+     which are allowed by the standard
+     */
+    const CHANGE_ALWAYS = 'always';
+    const CHANGE_HOURLY = 'hourly';
+    const CHANGE_DAILY = 'daily';
+    const CHANGE_WEEKLY = 'weekly';
+    const CHANGE_MONTHLY = 'monthly';
+    const CHANGE_YEARLY = 'yearly';
+    const CHANGE_NEVER = 'never';
+
+    /**
+     * To check valid values
+     * @var string[]
+     */
+    private $changefreq_validate = [
+        self::CHANGE_ALWAYS,
+        self::CHANGE_HOURLY,
+        self::CHANGE_DAILY,
+        self::CHANGE_WEEKLY,
+        self::CHANGE_MONTHLY,
+        self::CHANGE_YEARLY,
+        self::CHANGE_NEVER
+    ];
     /**
      * The absolute path to the directory where the site map will be saved
      * @var string
@@ -124,6 +150,25 @@ class Config
      * @var string
      */
     private $xmlns_sitemap_index = '';
+
+    /**
+     * @var DateTimeInterface
+     */
+    private $sitemap_lastmod_default = null;
+
+    /**
+     * @var float
+     */
+    private $sitemap_priority_default = null;
+
+    /**
+     * @var string
+     */
+    private $sitemap_changefreq_default = null;
+    /**
+     * @var DateTimeInterface
+     */
+    private $sitemap_index_lastmod_default = null;
 
     /**
      * Constructor, sets parameters for silence
@@ -526,6 +571,88 @@ class Config
     public function setXmlnsSitemapIndex(string $xmlns_sitemap_index): Config
     {
         $this->xmlns_sitemap_index = $xmlns_sitemap_index;
+        return $this;
+    }
+
+
+    /**
+     * @return DateTimeInterface
+     */
+    public function getSitemapLastmodDefault(): ?DateTimeInterface
+    {
+        return $this->sitemap_lastmod_default;
+    }
+
+    /**
+     * @param DateTimeInterface $sitemap_lastmod_default
+     * @return Config
+     */
+    public function setSitemapLastmodDefault(DateTimeInterface $sitemap_lastmod_default): Config
+    {
+        $this->sitemap_lastmod_default = $sitemap_lastmod_default;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getSitemapPriorityDefault(): ?float
+    {
+        return $this->sitemap_priority_default;
+    }
+
+    /**
+     * @param float $sitemap_priority_default
+     * @return Config
+     * @throws ConfigException
+     */
+    public function setSitemapPriorityDefault(float $sitemap_priority_default): Config
+    {
+        if($sitemap_priority_default > 1 or $sitemap_priority_default < 0.1){
+            throw new ConfigException('The priority property must be from 0.1 to 1.0 passed: "'.$sitemap_priority_default.'".');
+        }
+        $this->sitemap_priority_default = $sitemap_priority_default;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSitemapChangefreqDefault(): ?string
+    {
+        return $this->sitemap_changefreq_default;
+    }
+
+    /**
+     * @param string $sitemap_changefreq_default
+     * @return Config
+     * @throws ConfigException
+     */
+    public function setSitemapChangefreqDefault(string $sitemap_changefreq_default): Config
+    {
+
+        if(!in_array($sitemap_changefreq_default,$this->changefreq_validate)){
+            throw new ConfigException('The priority "changefreq" must have one of the values: ['.implode(',',$this->changefreq_validate).'] transmitted: "'.$sitemap_changefreq_default.'".');
+        }
+        $this->sitemap_changefreq_default = $sitemap_changefreq_default;
+        return $this;
+    }
+
+    /**
+     * @return DateTimeInterface
+     */
+    public function getSitemapIndexLastmodDefault(): ?DateTimeInterface
+    {
+        return $this->sitemap_index_lastmod_default;
+    }
+
+    /**
+     * @param DateTimeInterface $sitemap_index_lastmod_default
+     * @return Config
+     */
+    public function setSitemapIndexLastmodDefault(DateTimeInterface $sitemap_index_lastmod_default): Config
+    {
+        $this->sitemap_index_lastmod_default = $sitemap_index_lastmod_default;
         return $this;
     }
 

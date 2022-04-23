@@ -2,6 +2,8 @@
 
 namespace stastoken\litesitemap\Controller;
 
+use DateTimeInterface;
+use Exception;
 use stastoken\litesitemap\Model\RulesNode;
 
 /**
@@ -16,15 +18,15 @@ class DomMakerSitemapIndex extends DomMaker
 
     /**
      *
-     * @param null $xml_header
-     * @param null $xmlns
-     * @param string|null $lastmod_default
-     * @throws \Exception
+     * @param string|null $xml_header
+     * @param string|null $xmlns
+     * @param DateTimeInterface|null $lastmod_default
+     * @throws Exception
      */
     public function __construct(
-        $xml_header = null,
-        $xmlns = null,
-        string $lastmod_default = null
+        string            $xml_header = null,
+        string            $xmlns = null,
+        DateTimeInterface $lastmod_default = null
     )
     {
         $xml_header = $xml_header ?? $this->xml_header;
@@ -46,7 +48,7 @@ class DomMakerSitemapIndex extends DomMaker
         $tag_sitemap->addChild('loc', $link);
 
         if(count($rules_node) === 0){
-            if (!is_null($this->lastmod_default)) $tag_sitemap->addChild('lastmod', $this->lastmod_default);
+            if (!is_null($this->lastmod_default)) $tag_sitemap->addChild('lastmod', $this->lastmod_default->format(\DateTimeInterface::W3C));
             return $this;
         }
         /**@var RulesNode $rules * */
@@ -57,10 +59,10 @@ class DomMakerSitemapIndex extends DomMaker
                  * We set optional tags only if there is a
                  * value from the filter or by default
                  */
-                $lastmod_value = is_null($lastmod_value) ? $this->lastmod_default : $lastmod_value;
+                $lastmod_value = is_null($lastmod_value) ? $this->lastmod_default->format(\DateTimeInterface::W3C) : $lastmod_value;
                 if (!is_null($lastmod_value)) $tag_sitemap->addChild('lastmod', $lastmod_value);
             } else {
-                if (!is_null($this->lastmod_default)) $tag_sitemap->addChild('lastmod', $this->lastmod_default);
+                if (!is_null($this->lastmod_default)) $tag_sitemap->addChild('lastmod', $this->lastmod_default->format(\DateTimeInterface::W3C));
             }
         }
     }

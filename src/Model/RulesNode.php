@@ -2,6 +2,7 @@
 
 namespace stastoken\litesitemap\Model;
 
+use DateTimeInterface;
 use ReflectionClass;
 use stastoken\litesitemap\Exceptions\ModelException;
 /**
@@ -41,10 +42,10 @@ class RulesNode
 
     /**
      * The time to set in the tag lastmod
-     * @param \DateTimeInterface $lastmod
+     * @param DateTimeInterface $lastmod
      * @return $this
      */
-    public function setLastmod(\DateTimeInterface $lastmod):self
+    public function setLastmod(DateTimeInterface $lastmod):self
     {
         $this->lastmod = $lastmod;
         return $this;
@@ -95,13 +96,10 @@ class RulesNode
     /**
      * Returns a string with the content update time
      * @link https://www.w3.org/TR/NOTE-datetime
-     * @return string|null
+     * @return DateTimeInterface|null
      */
-    public function getLastmod(): ?string
+    public function getLastmod(): ?DateTimeInterface
     {
-        if(!is_null($this->lastmod)){
-            return $this->lastmod->format(\DateTimeInterface::W3C);
-        }
         return $this->lastmod;
     }
 

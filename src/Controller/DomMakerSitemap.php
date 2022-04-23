@@ -2,6 +2,8 @@
 
 namespace stastoken\litesitemap\Controller;
 
+use DateTimeInterface;
+use Exception;
 use stastoken\litesitemap\Model\RulesNode;
 
 /**
@@ -22,19 +24,19 @@ class DomMakerSitemap extends DomMaker
      * Lastmod,Priority,Changefreq - will be applied to all tags by
      * default if there is no special rule for them or will be skipped
      * if they are of type null
-     * @param null $xml_header - doctype of the document
-     * @param null $xmlns - Reference to the standard
-     * @param string|null $lastmod_default - lastmod tag default
-     * @param string|null $priority_default - priority tag default
+     * @param string|null $xml_header - doctype of the document
+     * @param string|null $xmlns - Reference to the standard
+     * @param DateTimeInterface|null $lastmod_default - lastmod tag default
+     * @param float|null $priority_default - priority tag default
      * @param string|null $changefreq_default - changefreq tag default
-     * @throws \Exception
+     * @throws Exception
      */
     public function __construct(
-        $xml_header = null,
-        $xmlns = null,
-        string $lastmod_default = null,
-        string $priority_default = null,
-        string $changefreq_default = null
+        string            $xml_header = null,
+        string            $xmlns = null,
+        DateTimeInterface $lastmod_default = null,
+        float             $priority_default = null,
+        string            $changefreq_default = null
     )
     {
         $xml_header = $xml_header ?? $this->xml_header;
@@ -46,20 +48,11 @@ class DomMakerSitemap extends DomMaker
         $this->changefreq_default = $changefreq_default;
     }
 
-//    /**
-//     * Returns the finished XML document as a string
-//     * @return string
-//     */
-//    public function make():string
-//    {
-//        return $this->root->asXML();
-//    }
-
     /**
      * Fills the DOM tree
      * @param string $link
      * @param array $rules_node
-     * @return $this|bool
+     * @return $this
      */
     public function set(string $link, array &$rules_node = [])
     {
@@ -67,7 +60,7 @@ class DomMakerSitemap extends DomMaker
         $tag_url->addChild('loc', $link);
 
         if(count($rules_node) === 0){
-            if (!is_null($this->lastmod_default)) $tag_url->addChild('lastmod', $this->lastmod_default);
+            if (!is_null($this->lastmod_default)) $tag_url->addChild('lastmod', $this->lastmod_default->format(\DateTimeInterface::W3C));
             if (!is_null($this->priority_default)) $tag_url->addChild('priority', $this->priority_default);
             if (!is_null($this->changefreq_default)) $tag_url->addChild('changefreq', $this->changefreq_default);
             return $this;
@@ -82,57 +75,17 @@ class DomMakerSitemap extends DomMaker
                  * We set optional tags only if there is a
                  * value from the filter or by default
                  */
-                $lastmod_value = is_null($lastmod_value) ? $this->lastmod_default : $lastmod_value;
+                $lastmod_value = is_null($lastmod_value) ? $this->lastmod_default->format(\DateTimeInterface::W3C) : $lastmod_value;
                 if (!is_null($lastmod_value)) $tag_url->addChild('lastmod', $lastmod_value);
                 $priority_value = is_null($priority_value) ? $this->priority_default : $priority_value;
                 if (!is_null($priority_value)) $tag_url->addChild('priority', $priority_value);
                 $changefreq_value = is_null($changefreq_value) ? $this->changefreq_default : $changefreq_value;
                 if (!is_null($changefreq_value)) $tag_url->addChild('changefreq', $changefreq_value);
             } else {
-                if (!is_null($this->lastmod_default)) $tag_url->addChild('lastmod', $this->lastmod_default);
+                if (!is_null($this->lastmod_default)) $tag_url->addChild('lastmod', $this->lastmod_default->format(\DateTimeInterface::W3C));
                 if (!is_null($this->priority_default)) $tag_url->addChild('priority', $this->priority_default);
                 if (!is_null($this->changefreq_default)) $tag_url->addChild('changefreq', $this->changefreq_default);
             }
         }
     }
-
-//    /**
-//     * Rolls back the last added link from the tree
-//     */
-//    public function rollback()
-//    {
-//        $index = $this->root->count() - 1;
-//        unset($this->root->url[$index]);
-//    }
-//
-//    /**
-//     * Returns the number of links in the tree
-//     * @return int
-//     */
-//    public function links():int
-//    {
-//        return $this->root->count();
-//    }
-//
-//    /**
-//     * Returns the size of the text occupied by the dom tree
-//     * @return int
-//     */
-//    public function bytes():int
-//    {
-//        return mb_strlen($this->root->asXML());
-//    }
-//
-//    /**
-//     * Сhecks whether the rule matches the current URL
-//     * @param string $regex
-//     * @param string $link
-//     * @return bool
-//     */
-//    private function scan(string $regex,string $link):bool
-//    {
-//        $is_find = preg_match($regex, $link, $matches, PREG_OFFSET_CAPTURE, 0);
-//        if($is_find === 1) return true;
-//        return false;
-//    }
 }
